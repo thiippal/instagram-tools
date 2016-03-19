@@ -2,7 +2,6 @@
 
 from instagram.client import InstagramAPI
 import requests
-import time
 import cv2
 import numpy as np
 import argparse
@@ -92,22 +91,11 @@ def download_hashtag(number, tag, resolution):
                          'Location': location,
                          'Tags': ' '.join(tags)})
 
-        # Wait 7 seconds to keep within the 500/hour request rate
-        time.sleep(7)
-
     dataframe = pd.DataFrame(metadata)
     dataframe.index += 1  # Set dataframe index to start from 1
 
     return dataframe
 
-
-print "*** Downloading {} images for hashtag {} ...".format(count, ht)
-
-download_time = int((count * float(7)) / 60)
-
-print "*** This will take approximately {} minutes or {} hours with current API request rate ...".format(download_time,
-                                                                                                         download_time / float(
-                                                                                                             60))
 df = download_hashtag(count, ht, size)
 
 # Define a filename for dataframe
