@@ -59,6 +59,8 @@ def download_hashtag(number, tag, resolution):
         identifier = media.id  # Unique image identifier
         user = media.user.username  # Instagram username
         imurl = media.images["%s" % resolution].url  # Resolution: thumbnail, low_resolution, standard_resolution
+        created = media.created_time
+        caption = media.caption
 
         # Check if location data is available.
         try:
@@ -89,7 +91,10 @@ def download_hashtag(number, tag, resolution):
                          'User': user,
                          'URL': imurl,
                          'Location': location,
-                         'Tags': ' '.join(tags)})
+                         'Tags': ' '.join(tags),
+                         'Created': created,
+                         'Filename': filename,
+                         'Caption': caption})
 
     dataframe = pd.DataFrame(metadata)
     dataframe.index += 1  # Set dataframe index to start from 1

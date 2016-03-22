@@ -18,7 +18,7 @@ def describe(image):
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    haralick = mahotas.features.haralick(gray).mean(axis = 0)
+    haralick = mahotas.features.haralick(gray).mean(axis=0)
 
     return np.hstack([colorStats, haralick])
 
@@ -46,13 +46,13 @@ def train_rfc():
     predictions = model.predict(testData)
     print(classification_report(testLabels, predictions))
 
-    datafile = "features.pkl"
+    datafile = "models/features.pkl"
     td_file = open(datafile, 'wb')
     pickle.dump(data, td_file)
 
     td_file.close()
 
-    labelfile = "labels.pkl"
+    labelfile = "models/labels.pkl"
     ld_file = open(labelfile, 'wb')
     pickle.dump(labels, ld_file)
 
@@ -83,3 +83,11 @@ def load_model():
 
     # Return the trained classifier
     return model
+
+# Classify image using model
+def classify(features, model):
+    # Classify input image
+    prediction = model.predict(features)[0]
+
+    # Return classification
+    return prediction
