@@ -14,18 +14,18 @@ import pickle
 # Describe image using colour statistics and Haralick texture
 def describe(image):
     (means, stds) = cv2.meanStdDev(cv2.cvtColor(image, cv2.COLOR_BGR2HSV))
-    colorStats = np.concatenate([means, stds]).flatten()
+    colorstats = np.concatenate([means, stds]).flatten()
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     haralick = mahotas.features.haralick(gray).mean(axis=0)
 
-    return np.hstack([colorStats, haralick])
+    return np.hstack([colorstats, haralick])
 
 # Extract features and train a Random Forest Classifier
 def train_rfc():
 
-    imagepaths = sorted(paths.list_images('test_output/'))
+    imagepaths = sorted(paths.list_images('training_data/'))
     labels = []
     data = []
 
@@ -37,14 +37,14 @@ def train_rfc():
         labels.append(label)
         data.append(features)
 
-    (trainData, testData, trainLabels, testLabels) = train_test_split(np.array(data), np.array(labels), test_size = 0.25, random_state = 42)
+    (traindata, testdata, trainlabels, testlabels) = train_test_split(np.array(data), np.array(labels), test_size=0.25, random_state=42)
 
-    model = RandomForestClassifier(n_estimators = 20, random_state = 42)
+    model = RandomForestClassifier(n_estimators=20, random_state=42)
 
-    model.fit(trainData, trainLabels)
+    model.fit(traindata, trainlabels)
 
-    predictions = model.predict(testData)
-    print(classification_report(testLabels, predictions))
+    predictions = model.predict(testdata)
+    print(classification_report(testlabels, predictions))
 
     datafile = "models/features.pkl"
     td_file = open(datafile, 'wb')
