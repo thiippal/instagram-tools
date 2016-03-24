@@ -73,19 +73,22 @@ def load_model():
     labels = pickle.load(ld_file)
 
     # Split data for training and testing
-    (trainData, testData, trainLabels, testLabels) = train_test_split(np.array(data), np.array(labels), test_size=0.25, random_state=42)
+    (traindata, testdata, trainlabels, testlabels) = train_test_split(np.array(data), np.array(labels), test_size=0.25, random_state=42)
 
     # Set up Random Forest Classifier
     model = RandomForestClassifier(n_estimators=20, random_state=42)
 
     # Train the classifier
-    model.fit(trainData, trainLabels)
+    model.fit(traindata, trainlabels)
 
     # Return the trained classifier
     return model
 
 # Classify image using model
 def classify(features, model):
+    # Reshape the features
+    features = features.reshape(1, -1)
+
     # Classify input image
     prediction = model.predict(features)[0]
 

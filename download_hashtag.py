@@ -7,6 +7,7 @@ import numpy as np
 import argparse
 import pandas as pd
 from api_credentials import access_token, client_secret, client_id
+from utils import classify, describe, load_model
 
 # Authenticate with Instagram API
 
@@ -21,6 +22,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-ht", "--hashtag", required=True, help="Define the hashtag for retrieving images.")
 ap.add_argument("-n", "--number", required=True, help="Define the number of images to be retrieved.")
 ap.add_argument("-r", "--resolution", required=True, help="Define the resolution of the image to be retrieved.")
+ap.add_argument('-c', "--clean", action='store_true', help="Remove memes, screenshots and other clutter from the data.")
 
 # Parse arguments
 
@@ -31,7 +33,13 @@ args = vars(ap.parse_args())
 count = int(args["number"])
 ht = args["hashtag"]
 size = args["resolution"]
+clean = args["clean"]
 
+print "*** Downloading {} images for #{} in {} size ...".format(count, ht, size)
+
+if clean:
+    print "*** Will attempt to clean the data from memes, screenshots and other clutter ..."
+    model = load_model()
 
 # Define a function for downloading images
 
@@ -81,6 +89,16 @@ def download_hashtag(number, tag, resolution):
         image = np.asarray(bytearray(response.content), dtype="uint8")
         image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
+        # Describe and classify the image if requested
+        if clean:
+            # Extract features
+            features = describe(image)
+
+            # Classify image
+            prediction = classify(features, model)
+
+            print prediction
+
         # Save image
         filename = str(ht) + '-' + str(identifier) + '.png'
         cv2.imwrite("test_output/%s" % filename, image)
@@ -110,7 +128,6 @@ df_file = "test_output/%s" % str(ht) + ".pkl"
 print "*** Saving metadata into {}".format(df_file)
 
 # Pickle dataframe
-
 df.to_pickle(df_file)
 
 print "*** ... Done."
