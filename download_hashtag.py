@@ -89,6 +89,8 @@ def download_hashtag(number, tag, resolution):
         image = np.asarray(bytearray(response.content), dtype="uint8")
         image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
+        save = True
+
         # Describe and classify the image if requested
         if clean:
             # Extract features
@@ -97,22 +99,31 @@ def download_hashtag(number, tag, resolution):
             # Classify image
             prediction = classify(features, model)
 
-            print prediction
+            if prediction == 'photo':
+                pass
+            if prediction == 'other':
+                save = False
 
-        # Save image
-        filename = str(ht) + '-' + str(identifier) + '.png'
-        cv2.imwrite("test_output/%s" % filename, image)
+        if save:
+            # Save image
+            filename = str(ht) + '-' + str(identifier) + '.png'
+            cv2.imwrite("test_output/%s" % filename, image)
 
         # Store metadata
 
-        metadata.append({'Identifier': identifier,
-                         'User': user,
-                         'URL': imurl,
-                         'Location': location,
-                         'Tags': ' '.join(tags),
-                         'Created': created,
-                         'Filename': filename,
-                         'Caption': caption})
+            metadata.append({'Identifier': identifier,
+                            'User': user,
+                            'URL': imurl,
+                            'Location': location,
+                            'Tags': ' '.join(tags),
+                            'Created': created,
+                            'Filename': filename,
+                            'Caption': caption})
+
+        else:
+            pass
+
+    print "*** Retrieved a total of {} images ... ".format(len(metadata))
 
     dataframe = pd.DataFrame(metadata)
     dataframe.index += 1  # Set dataframe index to start from 1
