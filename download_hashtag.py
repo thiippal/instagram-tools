@@ -109,16 +109,15 @@ def download_hashtag(number, tag, resolution):
             filename = str(ht) + '-' + str(identifier) + '.png'
             cv2.imwrite("test_output/%s" % filename, image)
 
-        # Store metadata
-
+            # Store metadata
             metadata.append({'Identifier': identifier,
-                            'User': user,
-                            'URL': imurl,
-                            'Location': location,
-                            'Tags': ' '.join(tags),
-                            'Created': created,
-                            'Filename': filename,
-                            'Caption': caption})
+                             'User': user,
+                             'URL': imurl,
+                             'Location': location,
+                             'Tags': ' '.join(tags),
+                             'Created': created,
+                             'Filename': filename,
+                             'Caption': caption})
 
         else:
             pass
