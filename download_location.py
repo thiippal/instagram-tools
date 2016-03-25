@@ -7,7 +7,7 @@ import numpy as np
 import argparse
 import pandas as pd
 from api_credentials import access_token, client_secret, client_id
-from utils import classify, describe, load_model
+from utils import classify, describe, train
 
 # Authenticate with Instagram API
 
@@ -46,7 +46,7 @@ print "*** Downloading {} images at {}, {} in {} size ...".format(count, latitud
 
 if clean:
     print "*** Will attempt to clean the data from memes, screenshots and other clutter ..."
-    model = load_model()
+    model = train()
 
 
 def download_location(lat, lng, dist, number, resolution):

@@ -22,8 +22,8 @@ def describe(image):
 
     return np.hstack([colorstats, haralick])
 
-# Extract features and train a Random Forest Classifier
-def train_rfc():
+# Extract features
+def extract():
 
     imagepaths = sorted(paths.list_images('training_data/'))
     labels = []
@@ -36,15 +36,6 @@ def train_rfc():
         features = describe(image)
         labels.append(label)
         data.append(features)
-
-    (traindata, testdata, trainlabels, testlabels) = train_test_split(np.array(data), np.array(labels), test_size=0.25, random_state=42)
-
-    model = RandomForestClassifier(n_estimators=20, random_state=42)
-
-    model.fit(traindata, trainlabels)
-
-    predictions = model.predict(testdata)
-    print(classification_report(testlabels, predictions))
 
     datafile = "models/features.pkl"
     td_file = open(datafile, 'wb')
@@ -61,7 +52,8 @@ def train_rfc():
     return
 
 # Train a Random Forest Classifier using pre-extracted data
-def load_model():
+def train():
+
     # Load features
     datafile = "models/features.pkl"
     td_file = open(datafile, 'r')
@@ -75,13 +67,16 @@ def load_model():
     # Split data for training and testing
     (traindata, testdata, trainlabels, testlabels) = train_test_split(np.array(data), np.array(labels), test_size=0.25, random_state=42)
 
-    # Set up Random Forest Classifier
+    # Train Random Forest Classifier
     model = RandomForestClassifier(n_estimators=20, random_state=42)
-
-    # Train the classifier
     model.fit(traindata, trainlabels)
 
-    # Return the trained classifier
+    # Evaluate the classifier
+
+    predictions = model.predict(testdata)
+    print(classification_report(predictions, testlabels, target_names=testlabels))
+
+    # Return trained classifier
     return model
 
 # Classify image using model

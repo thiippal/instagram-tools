@@ -3,10 +3,10 @@
 import pandas as pd
 import argparse
 import cv2
-from utils import classify, describe, load_model
+from utils import classify, describe, train
 
-# Load model for Random Forest Classifier
-model = load_model()
+# Load Random Forest Classifier
+model = train()
 
 # Set up the argument parser
 
@@ -42,14 +42,14 @@ for index, row in df.iterrows():
     features = describe(image)
 
     # Classify image
-    prediction = classify(features.reshape(1, -1), model)
+    prediction = classify(features, model)
 
     print "*** Classifying {} ... prediction: {}".format(ipath, prediction)
 
     # Take action based on prediction
     if prediction == 'photo':
         cv2.imwrite("test_output/photos/%s" % row['Filename'], image)
-    elif prediction == 'other':
+    if prediction == 'other':
         df = df[df.index != index]
         cv2.imwrite("test_output/others/%s" % row['Filename'], image)
 
