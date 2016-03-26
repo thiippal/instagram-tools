@@ -55,6 +55,7 @@ def download_location(lat, lng, dist, number, resolution):
 
     # Retrieve data
     photos = api.media_search(lat=lat, lng=lng, distance=dist, count=number)
+    # TODO How to retrieve over 100 images
 
     # Download images
     for m in range(0, number):
@@ -118,6 +119,8 @@ def download_location(lat, lng, dist, number, resolution):
 
                 else:
                     pass
+
+            print created
 
     print "*** Retrieved a total of {} images ... ".format(len(metadata))
 
