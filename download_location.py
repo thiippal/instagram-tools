@@ -8,10 +8,24 @@ import argparse
 import pandas as pd
 from api_credentials import access_token, client_secret, client_id
 from utils import classify, describe, train
+from datetime import datetime
 
 # Authenticate with Instagram API
 
 api = InstagramAPI(access_token=access_token, client_id=client_id, client_secret=client_secret)
+
+# Define functions
+
+def convert_utc(datets):
+    # TODO Add docstring
+    unix_ts = int((datets - datetime(1970, 1, 1)).total_seconds())
+    return unix_ts
+
+def get_stamp(timestamp):
+    # TODO Add docstring
+    media = api.media_search(lat=latitude, lng=longitude, distance=distance, count=100, max_timestamp=timestamp)
+    new_max_timestamp = convert_utc(media[-1].created_time)
+    return new_max_timestamp
 
 # Set up the argument parser
 
@@ -27,7 +41,7 @@ ap.add_argument("-r", "--resolution", required=True, help="Define the resolution
 ap.add_argument('-c', "--clean", action='store_true', help="Remove memes, screenshots and other clutter from the data.")
 
 # Test string for command line query
-# python download_location.py -lat 60.169444 -lon 24.9525 -d 20 -c 40 -r thumbnail
+# python download_location.py -lat 60.169444 -lon 24.9525 -d 100 -n 180 -r thumbnail
 
 # Parse arguments
 
@@ -53,9 +67,30 @@ def download_location(lat, lng, dist, number, resolution):
     # Set up a list for metadata
     metadata = []
 
-    # Retrieve data
-    photos = api.media_search(lat=lat, lng=lng, distance=dist, count=number)
     # TODO How to retrieve over 100 images
+    if number <= 100:
+        # Retrieve the data directly without pagination
+        photos = api.media_search(lat=lat, lng=lng, distance=dist, count=number)
+
+    if number >= 100:
+        # Set up a list for photos
+        photos = []
+
+        # Get current time
+        init_timestamp = convert_utc(datetime.now())
+
+        # Calculate the number of loops required to fetch the required number of photos
+        loops = int(count / float(100))
+
+        # Get the maximum timestamp for each batch of 100 photos
+        timestamps = [init_timestamp]
+        for stamp in range(0, loops):
+            timestamps.append(get_stamp(timestamps[-1]))
+
+        # Fetch the images using the timestamps
+        for timestamp in timestamps:
+            more_photos = api.media_search(lat=lat, lng=lng, distance=dist, count=100, max_timestamp=timestamp)
+            photos.extend(more_photos)
 
     # Download images
     for m in range(0, number):
@@ -119,8 +154,6 @@ def download_location(lat, lng, dist, number, resolution):
 
                 else:
                     pass
-
-            print created
 
     print "*** Retrieved a total of {} images ... ".format(len(metadata))
 
