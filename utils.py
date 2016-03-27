@@ -71,11 +71,6 @@ def train():
     model = RandomForestClassifier(n_estimators=20, random_state=42)
     model.fit(traindata, trainlabels)
 
-    # Evaluate the classifier
-
-    predictions = model.predict(testdata)
-    print(classification_report(predictions, testlabels, target_names=testlabels))
-
     # Return trained classifier
     return model
 

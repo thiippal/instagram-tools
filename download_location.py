@@ -17,12 +17,18 @@ api = InstagramAPI(access_token=access_token, client_id=client_id, client_secret
 # Define functions
 
 def convert_utc(datets):
-    # TODO Add docstring
+    """Converts a Python datetime into a Unix timestamp.
+    :param datets: Python datetime
+    :return: Unix timestamp
+    """
     unix_ts = int((datets - datetime(1970, 1, 1)).total_seconds())
     return unix_ts
 
 def get_stamp(timestamp):
-    # TODO Add docstring
+    """Retrieves timestamp for the 100th image following the input timestamp, used to retrieve the next 100 images.
+    :param timestamp: Unix timestamp
+    :return: Unix timestamp
+    """
     media = api.media_search(lat=latitude, lng=longitude, distance=distance, count=100, max_timestamp=timestamp)
     new_max_timestamp = convert_utc(media[-1].created_time)
     return new_max_timestamp
@@ -67,7 +73,6 @@ def download_location(lat, lng, dist, number, resolution):
     # Set up a list for metadata
     metadata = []
 
-    # TODO How to retrieve over 100 images
     if number <= 100:
         # Retrieve the data directly without pagination
         photos = api.media_search(lat=lat, lng=lng, distance=dist, count=number)
@@ -83,6 +88,7 @@ def download_location(lat, lng, dist, number, resolution):
         loops = int(count / float(100))
 
         # Get the maximum timestamp for each batch of 100 photos
+        print "*** Retrieving timestamps (this might take a while) ..."
         timestamps = [init_timestamp]
         for stamp in range(0, loops):
             timestamps.append(get_stamp(timestamps[-1]))
