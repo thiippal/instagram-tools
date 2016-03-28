@@ -14,7 +14,7 @@ ap = argparse.ArgumentParser()
 
 # Define arguments
 
-ap.add_argument("-f", "--file", required=True, help="Path to the pandas dataframe with image metadata.")
+ap.add_argument("-f", "--file", required=True, help="Path to the pandas dataframe with Instagram metadata.")
 
 # Parse arguments
 
@@ -28,7 +28,7 @@ df_file = args["file"]
 
 df = pd.read_pickle(df_file)
 
-print "*** Loading image metadata from {} ...".format(df_file)
+print "*** Loading Instagram metadata from {} ...".format(df_file)
 
 # Loop over images in the dataframe
 for index, row in df.iterrows():

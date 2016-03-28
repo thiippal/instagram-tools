@@ -61,68 +61,70 @@ def download_hashtag(number, tag, resolution):
         max_tag = str(max_tag)
         hashtag.extend(more_photos)
 
+    # TODO Download only images, ie. if media.type == 'image':
     # Download images
     for m in range(0, number):
-        media = hashtag[m]
-        identifier = media.id  # Unique image identifier
-        user = media.user.username  # Instagram username
-        imurl = media.images["%s" % resolution].url  # Resolution: thumbnail, low_resolution, standard_resolution
-        created = media.created_time
-        caption = media.caption
+        photo = hashtag[m]
+        if photo.type == 'image':
+            identifier = photo.id  # Unique image identifier
+            user = photo.user.username  # Instagram username
+            imurl = photo.images["%s" % resolution].url  # Resolution: thumbnail, low_resolution, standard_resolution
+            created = photo.created_time
+            caption = photo.caption
 
-        # Check if location data is available.
-        try:
-            location = media.location
-        except AttributeError:
-            location = "Location: N/A"
-            pass
-
-        print "*** Downloading", "#%s" % str(m + 1), identifier, "taken by", user, "at", location
-
-        tags = []
-        for tag in media.tags:
-            tags.append(tag.name)
-
-        # Get response and print status
-        response = requests.get(imurl)
-        print "*** {} {} ...".format(response.status_code, response.reason)
-
-        # Decode response
-        image = np.asarray(bytearray(response.content), dtype="uint8")
-        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
-        save = True
-
-        # Describe and classify the image if requested
-        if clean:
-            # Extract features
-            features = describe(image)
-
-            # Classify image
-            prediction = classify(features, model)
-
-            if prediction == 'photo':
+            # Check if location data is available.
+            try:
+                location = photo.location
+            except AttributeError:
+                location = "Location: N/A"
                 pass
-            if prediction == 'other':
-                save = False
 
-        if save:
-            # Save image
-            filename = str(ht) + '-' + str(identifier) + '.png'
-            cv2.imwrite("test_output/%s" % filename, image)
+            print "*** Downloading", "#%s" % str(m + 1), identifier, "taken by", user, "at", location
 
-            # Store metadata
-            metadata.append({'Identifier': identifier,
-                             'User': user,
-                             'URL': imurl,
-                             'Location': location,
-                             'Tags': ' '.join(tags),
-                             'Created': created,
-                             'Filename': filename,
-                             'Caption': caption})
+            tags = []
+            for tag in photo.tags:
+                tags.append(tag.name)
 
-        else:
-            pass
+            # Get response and print status
+            response = requests.get(imurl)
+            print "*** {} {} ...".format(response.status_code, response.reason)
+
+            # Decode response
+            image = np.asarray(bytearray(response.content), dtype="uint8")
+            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+            save = True
+
+            # Describe and classify the image if requested
+            if clean:
+                # Extract features
+                features = describe(image)
+
+                # Classify image
+                prediction = classify(features, model)
+
+                if prediction == 'photo':
+                    pass
+                if prediction == 'other':
+                    save = False
+
+            if save:
+                # Save image
+                filename = str(ht) + '-' + str(identifier) + '.png'
+                cv2.imwrite("test_output/%s" % filename, image)
+
+                # Store metadata
+                metadata.append({'Identifier': identifier,
+                                 'User': user,
+                                 'URL': imurl,
+                                 'Location': location,
+                                 'Tags': ' '.join(tags),
+                                 'Created': created,
+                                 'Filename': filename,
+                                 'Caption': caption})
+
+            else:
+                pass
 
     print "*** Retrieved a total of {} images ... ".format(len(metadata))
 
