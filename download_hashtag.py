@@ -83,7 +83,9 @@ def download_hashtag(number, tag, resolution):
         for tag in media.tags:
             tags.append(tag.name)
 
+        # Get response and print status
         response = requests.get(imurl)
+        print "*** {} {} ...".format(response.status_code, response.reason)
 
         # Decode response
         image = np.asarray(bytearray(response.content), dtype="uint8")

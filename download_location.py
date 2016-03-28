@@ -86,6 +86,7 @@ def download_location(lat, lng, dist, number, resolution):
 
         # Calculate the number of loops required to fetch the required number of photos
         loops = int(count / float(100))
+        print "*** Performing {} loops ...".format(loops)
 
         # Get the maximum timestamp for each batch of 100 photos
         print "*** Retrieving timestamps (this might take a while) ..."
@@ -121,7 +122,9 @@ def download_location(lat, lng, dist, number, resolution):
                 for tag in photo.tags:
                     tags.append(tag.name)
 
+                # Get response and print status
                 response = requests.get(imurl)
+                print "*** {} {} ...".format(response.status_code, response.reason)
 
                 # Decode response
                 image = np.asarray(bytearray(response.content), dtype="uint8")
