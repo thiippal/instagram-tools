@@ -89,6 +89,7 @@ for u in user_ids:
     # Set up a list for the location vector
     lvec = []
 
+    # TODO Discard users with less than 20 photos
     # Check if user has uploaded more than 20 photos ...
     if len(media) == 20:
         # Check if the photos have location information
@@ -98,11 +99,12 @@ for u in user_ids:
                     location = m.location.name
                     latitude = m.location.point.latitude
                     longitude = m.location.point.longitude
+
+                    # Check the coordinates
+                    lvec.append(check_location(latitude, longitude))
+
                 except AttributeError:
                     pass
-
-                # Check the coordinates
-                lvec.append(check_location(latitude, longitude))
 
         # Count instances in location vector
         count = Counter(lvec)
@@ -122,5 +124,3 @@ print "*** Saving the updated dataframe into {}".format(new_df_file)
 
 df.to_pickle(new_df_file)
 print "*** ... Done."
-
-print df
