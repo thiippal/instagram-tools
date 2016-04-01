@@ -84,21 +84,26 @@ uprof = []
 # Loop over unique users
 for u in user_ids:
     # Retrieve 20 media
-    media, more = api.user_recent_media(user_id=u, count=20)
+    photos, more = api.user_recent_media(user_id=u, count=20)
+
+    print "*** Now profiling user {} with {} photos ...".format(u, len(photos))
 
     # Set up a list for the location vector
     lvec = []
 
     # TODO Discard users with less than 20 photos
-    # Check if user has uploaded more than 20 photos ...
-    if len(media) == 20:
-        # Check if the photos have location information
-        for m in media:
-            if m.type == 'image':
+    # Check if the photos have location information
+    if len(photos) is not 20:
+        print "*** Not enough photos, discarding {} ...".format(u)
+        df = df[df['User ID'] != u]
+        pass
+    else:
+        for p in photos:
+            if p.type == 'image':
                 try:
-                    location = m.location.name
-                    latitude = m.location.point.latitude
-                    longitude = m.location.point.longitude
+                    location = p.location.name
+                    latitude = p.location.point.latitude
+                    longitude = p.location.point.longitude
 
                     # Check the coordinates
                     lvec.append(check_location(latitude, longitude))
@@ -106,17 +111,22 @@ for u in user_ids:
                 except AttributeError:
                     pass
 
-        # Count instances in location vector
-        count = Counter(lvec)
+            # Count instances in location vector
+            count = Counter(lvec)
 
-    # Assign the user to a class
-    if count.most_common()[0][0]:
-        uprof.append("local")
-    if not count.most_common()[0][0]:
-        uprof.append("visitor")
+        # Assign the user to a class
+        if count.most_common()[0][0]:
+            uprof.append("local")
+        if not count.most_common()[0][0]:
+            uprof.append("visitor")
 
 # Append the user profiles to the dataframe
 df['Type'] = uprof
+
+# Reset dataframe index
+df = df.reset_index(drop=True)
+df.index += 1
+print "*** Updating dataframe index ..."
 
 # Pickle the updated data
 new_df_file = "test_output/profiles.pkl"

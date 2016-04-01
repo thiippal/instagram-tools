@@ -56,7 +56,6 @@ for index, row in df.iterrows():
 # Reset dataframe index
 df = df.reset_index(drop=True)
 df.index += 1
-
 print "*** Updating dataframe index ..."
 
 # Pickle cleaned data
