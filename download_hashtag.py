@@ -136,12 +136,12 @@ def download_hashtag(number, tag, resolution):
 df = download_hashtag(count, ht, size)
 
 # Define a filename for dataframe
-
 df_file = "test_output/%s" % str(ht) + ".pkl"
-
 print "*** Saving metadata into {}".format(df_file)
+
+# Check API rate
+print "*** API rate: {}/{} remaining ...".format(api.x_ratelimit_remaining, api.x_ratelimit)
 
 # Pickle dataframe
 df.to_pickle(df_file)
-
 print "*** ... Done."

@@ -175,12 +175,12 @@ def download_location(lat, lng, dist, number, resolution):
 df = download_location(latitude, longitude, distance, count, size)
 
 # Define a filename for dataframe
-
 df_file = "test_output/{}.pkl".format(str(latitude) + '_' + str(longitude))
-
 print "*** Saving metadata into {}".format(df_file)
+
+# Check API rate
+print "*** API rate: {}/{} remaining ...".format(api.x_ratelimit_remaining, api.x_ratelimit)
 
 # Pickle dataframe
 df.to_pickle(df_file)
-
 print "*** ... Done."
