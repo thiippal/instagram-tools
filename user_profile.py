@@ -132,5 +132,8 @@ print "*** Updating dataframe index ..."
 new_df_file = "test_output/profiles.pkl"
 print "*** Saving the updated dataframe into {}".format(new_df_file)
 
+# Check API rate
+print "*** API rate: {}/{} remaining ...".format(api.x_ratelimit_remaining, api.x_ratelimit)
+
 df.to_pickle(new_df_file)
 print "*** ... Done."
