@@ -5,6 +5,7 @@ from api_credentials import access_token, client_secret, client_id
 import pandas as pd
 import argparse
 from collections import Counter
+from progress.bar import Bar
 
 # Authenticate with Instagram API
 
@@ -13,6 +14,8 @@ api = InstagramAPI(access_token=access_token, client_id=client_id, client_secret
 # Define functions
 
 def get_user_id(usernames):
+    # Set up a progess bar
+    ubar = Bar('*** Retrieving user identifiers', max=len(usernames))
     # Set up a list for identifiers
     ids = []
     # Loop over the list of usernames
@@ -24,6 +27,10 @@ def get_user_id(usernames):
             # Append the exact match to the list of ids
             if uname == n.username:
                 ids.append(n.id)
+                # Update progress bar
+                ubar.next()
+    # Finish progress bar
+    ubar.finish()
     # Return the list of identifiers
     return ids
 
@@ -81,20 +88,20 @@ df['User ID'] = user_ids
 # Set up a dictionary for the user profiles
 uprof = []
 
+# Set up a progress bar
+pbar = Bar('*** Profiling users', max=len(user_ids))
+
 # Loop over unique users
 for u in user_ids:
     # Retrieve 20 media
     photos, more = api.user_recent_media(user_id=u, count=20)
 
-    print "*** Now profiling user {} with {} photos ...".format(u, len(photos))
-
     # Set up a list for the location vector
     lvec = []
 
-    # TODO Discard users with less than 20 photos
     # Check if the photos have location information
     if len(photos) is not 20:
-        print "*** Not enough photos, discarding {} ...".format(u)
+        # print "*** Not enough photos, discarding {} ...".format(u)
         df = df[df['User ID'] != u]
         pass
     else:
@@ -114,11 +121,15 @@ for u in user_ids:
             # Count instances in location vector
             count = Counter(lvec)
 
+        pbar.next()
+
         # Assign the user to a class
         if count.most_common()[0][0]:
             uprof.append("local")
         if not count.most_common()[0][0]:
             uprof.append("visitor")
+
+pbar.finish()
 
 # Append the user profiles to the dataframe
 df['Type'] = uprof
