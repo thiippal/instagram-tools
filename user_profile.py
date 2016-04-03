@@ -14,7 +14,7 @@ api = InstagramAPI(access_token=access_token, client_id=client_id, client_secret
 # Define functions
 
 def get_user_id(usernames):
-    # Set up a progess bar
+    # Initialize progess bar
     ubar = Bar('*** Retrieving user identifiers', max=len(usernames))
     # Set up a list for identifiers
     ids = []
@@ -88,7 +88,7 @@ df['User ID'] = user_ids
 # Set up a dictionary for the user profiles
 uprof = []
 
-# Set up a progress bar
+# Initialize progress bar
 pbar = Bar('*** Profiling users', max=len(user_ids))
 
 # Loop over unique users

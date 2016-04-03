@@ -63,7 +63,7 @@ count = int(args["number"])
 size = args["resolution"]
 clean = args["clean"]
 
-print "*** Downloading {} images at {}, {} in {} size ...".format(count, latitude, longitude, size)
+print "*** Downloading {} photos taken at {}, {} in {} size ...".format(count, latitude, longitude, size)
 
 if clean:
     print "*** Attempting to remove memes, screenshots and other clutter ..."
@@ -88,7 +88,7 @@ def download_location(lat, lng, dist, number, resolution):
         # Calculate the number of loops required to fetch the required number of photos
         loops = int(count / float(100))
 
-        # Set up progress bar
+        # Initialize progress bar
         lbar = Bar('*** Retrieving timestamps', max=loops)
 
         # Get the maximum timestamp for each batch of 100 photos
@@ -107,14 +107,14 @@ def download_location(lat, lng, dist, number, resolution):
         lbar.finish()
 
     # Check the number of retrieved photos
-    if len(photos) is not number:
+    if len(photos) <= number:
         retnum = len(photos)
         print "*** Not enough photos available at this location! Downloading only {} photos ...".format(retnum)
     else:
         retnum = number
 
-    # Set up progress tracking
-    dlbar = Bar('*** Downloading', max=retnum)
+    # Initialize progress bar
+    dlbar = Bar('*** Downloading photos   ', max=retnum)
 
     # Download images
     for m in range(0, retnum):
@@ -133,16 +133,14 @@ def download_location(lat, lng, dist, number, resolution):
                 location = "Location: N/A"
                 pass
 
-            # print "*** Downloading", "#%s" % str(m + 1), identifier, "taken by", user, "at", location.name, (lat, lng)
-
             tags = []
             for tag in photo.tags:
                 tags.append(tag.name)
 
-            # TODO Check that the response code is 200
-            # Get response and print status
+            # Check response
             response = requests.get(imurl)
-            # print "*** {} {} ...".format(response.status_code, response.reason)
+            if response.status_code != 200:
+                print 'Aborting ... error {} (}'.format(response.status_code, response.reason)
 
             # Decode response
             image = np.asarray(bytearray(response.content), dtype="uint8")

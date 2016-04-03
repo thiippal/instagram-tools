@@ -90,9 +90,10 @@ def download_hashtag(number, tag, resolution):
             for tag in photo.tags:
                 tags.append(tag.name)
 
-            # Get response and print status
+            # Check response
             response = requests.get(imurl)
-            print "*** {} {} ...".format(response.status_code, response.reason)
+            if response.status_code != 200:
+                print 'Aborting ... error {} (}'.format(response.status_code, response.reason)
 
             # Decode response
             image = np.asarray(bytearray(response.content), dtype="uint8")
