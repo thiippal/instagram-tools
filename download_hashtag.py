@@ -38,7 +38,7 @@ clean = args["clean"]
 print "*** Downloading {} images for #{} in {} size ...".format(count, ht, size)
 
 if clean:
-    print "*** Will attempt to clean the data from memes, screenshots and other clutter ..."
+    print "*** Attempting to remove memes, screenshots and other clutter ..."
     model = train()
 
 # Define a function for downloading images
@@ -61,9 +61,14 @@ def download_hashtag(number, tag, resolution):
         max_tag = str(max_tag)
         hashtag.extend(more_photos)
 
-    # TODO Download only images, ie. if media.type == 'image':
+    if len(hashtag) <= number:
+        retnum = len(hashtag)
+        print "*** Not enough photos available at this hashtag! Downloading {} only photos ...".format(retnum)
+    else:
+        retnum = number
+
     # Download images
-    for m in range(0, number):
+    for m in range(0, retnum):
         photo = hashtag[m]
         if photo.type == 'image':
             identifier = photo.id  # Unique image identifier
@@ -85,9 +90,10 @@ def download_hashtag(number, tag, resolution):
             for tag in photo.tags:
                 tags.append(tag.name)
 
-            # Get response and print status
+            # Check response
             response = requests.get(imurl)
-            print "*** {} {} ...".format(response.status_code, response.reason)
+            if response.status_code != 200:
+                print 'Aborting ... error {} (}'.format(response.status_code, response.reason)
 
             # Decode response
             image = np.asarray(bytearray(response.content), dtype="uint8")

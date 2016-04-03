@@ -9,6 +9,7 @@ import pandas as pd
 from api_credentials import access_token, client_secret, client_id
 from utils import classify, describe, train
 from datetime import datetime
+from progress.bar import Bar
 
 # Authenticate with Instagram API
 
@@ -62,10 +63,10 @@ count = int(args["number"])
 size = args["resolution"]
 clean = args["clean"]
 
-print "*** Downloading {} images at {}, {} in {} size ...".format(count, latitude, longitude, size)
+print "*** Downloading {} photos taken at {}, {} in {} size ...".format(count, latitude, longitude, size)
 
 if clean:
-    print "*** Will attempt to clean the data from memes, screenshots and other clutter ..."
+    print "*** Attempting to remove memes, screenshots and other clutter ..."
     model = train()
 
 
@@ -86,85 +87,106 @@ def download_location(lat, lng, dist, number, resolution):
 
         # Calculate the number of loops required to fetch the required number of photos
         loops = int(count / float(100))
-        print "*** Performing {} loops ...".format(loops)
+
+        # Initialize progress bar
+        lbar = Bar('*** Retrieving timestamps', max=loops)
 
         # Get the maximum timestamp for each batch of 100 photos
-        print "*** Retrieving timestamps (this might take a while) ..."
         timestamps = [init_timestamp]
         for stamp in range(0, loops):
             timestamps.append(get_stamp(timestamps[-1]))
+            # Update progress bar
+            lbar.next()
 
-        # Fetch the images using the timestamps
+        # Fetch the images using timestamps
         for timestamp in timestamps:
             more_photos = api.media_search(lat=lat, lng=lng, distance=dist, count=100, max_timestamp=timestamp)
             photos.extend(more_photos)
 
+        # Finish progress bar
+        lbar.finish()
+
+    # Check the number of retrieved photos
+    if len(photos) <= number:
+        retnum = len(photos)
+        print "*** Not enough photos available at this location! Downloading only {} photos ...".format(retnum)
+    else:
+        retnum = number
+
+    # Initialize progress bar
+    dlbar = Bar('*** Downloading photos   ', max=retnum)
+
     # Download images
-    for m in range(0, number):
-            photo = photos[m]
-            if photo.type == 'image':  # Limit the query to images
-                identifier = photo.id  # Unique image identifier
-                user = photo.user.username  # Instagram username
-                imurl = photo.images["%s" % resolution].url  # Resolution: thumbnail, low_resolution, standard_resolution
-                created = photo.created_time
-                caption = photo.caption
+    for m in range(0, retnum):
+        photo = photos[m]
+        if photo.type == 'image':  # Limit the query to images
+            identifier = photo.id  # Unique image identifier
+            user = photo.user.username  # Instagram username
+            imurl = photo.images["%s" % resolution].url  # Resolution: thumbnail, low_resolution, standard_resolution
+            created = photo.created_time
+            caption = photo.caption
 
-                # Check if location data is available.
-                try:
-                    location = photo.location
-                except AttributeError:
-                    location = "Location: N/A"
-                    pass
+            # Check if location data is available.
+            try:
+                location = photo.location
+            except AttributeError:
+                location = "Location: N/A"
+                pass
 
-                print "*** Downloading", "#%s" % str(m + 1), identifier, "taken by", user, "at", location.name, (lat, lng)
+            tags = []
+            for tag in photo.tags:
+                tags.append(tag.name)
 
-                tags = []
-                for tag in photo.tags:
-                    tags.append(tag.name)
+            # Check response
+            response = requests.get(imurl)
+            if response.status_code != 200:
+                print 'Aborting ... error {} (}'.format(response.status_code, response.reason)
 
-                # Get response and print status
-                response = requests.get(imurl)
-                print "*** {} {} ...".format(response.status_code, response.reason)
+            # Decode response
+            image = np.asarray(bytearray(response.content), dtype="uint8")
+            image = cv2.imdecode(image, cv2.IMREAD_COLOR)
 
-                # Decode response
-                image = np.asarray(bytearray(response.content), dtype="uint8")
-                image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+            save = True
 
-                save = True
+            # Describe and classify the image if requested
+            if clean:
+                # Extract features
+                features = describe(image)
 
-                # Describe and classify the image if requested
-                if clean:
-                    # Extract features
-                    features = describe(image)
+                # Classify image
+                prediction = classify(features, model)
 
-                    # Classify image
-                    prediction = classify(features, model)
-
-                    if prediction == 'photo':
+                if prediction == 'photo':
                         pass
-                    if prediction == 'other':
-                        save = False
+                if prediction == 'other':
+                    save = False
 
-                if save:
-                    # Save image
-                    filename = str(lat) + '_' + str(lng) + '-' + str(identifier) + '.png'
-                    cv2.imwrite("test_output/%s" % filename, image)
+            if save:
+                # Save image
+                filename = str(lat) + '_' + str(lng) + '-' + str(identifier) + '.png'
+                cv2.imwrite("test_output/%s" % filename, image)
 
-                    # Store metadata
-                    metadata.append({'Identifier': identifier,
-                                     'User': user,
-                                     'URL': imurl,
-                                     'Coordinates': (latitude, longitude),
-                                     'Location': location,
-                                     'Tags': ' '.join(tags),
-                                     'Created': created,
-                                     'Filename': filename,
-                                     'Caption': caption})
+                # Store metadata
+                metadata.append({'Identifier': identifier,
+                                 'User': user,
+                                 'URL': imurl,
+                                 'Coordinates': (latitude, longitude),
+                                 'Location': location,
+                                 'Tags': ' '.join(tags),
+                                 'Created': created,
+                                 'Filename': filename,
+                                 'Caption': caption})
 
-                else:
-                    pass
+            else:
+                pass
 
-    print "*** Retrieved a total of {} images ... ".format(len(metadata))
+            # Update progress bar
+            dlbar.next()
+
+    # Finish progress bar
+    dlbar.finish()
+
+    print "*** Retrieved a total of {} photos ... ".format(len(metadata))
 
     dataframe = pd.DataFrame(metadata)
     dataframe.index += 1  # Set dataframe index to start from 1
