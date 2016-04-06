@@ -1,11 +1,6 @@
 # Import the necessary packages and Instagram API credentials
 
-from instagram.client import InstagramAPI
-from api_credentials import access_token, client_secret, client_id
-import pandas as pd
-import argparse
-from collections import Counter
-from progress.bar import Bar
+from utils import *
 
 # Authenticate with Instagram API
 
@@ -87,6 +82,7 @@ df['User ID'] = user_ids
 
 # Set up a dictionary for the user profiles
 uprof = []
+u_lvec = []
 
 # Initialize progress bar
 pbar = Bar('*** Profiling users', max=len(user_ids))
@@ -96,43 +92,47 @@ for u in user_ids:
     # Retrieve 20 media
     photos, more = api.user_recent_media(user_id=u, count=20)
 
-    # Set up a list for the location vector
-    lvec = []
+    # Set up lists for the location vector
+    lvec_bool = []
+    lvec_coord = []
 
     # Check if the photos have location information
-    if len(photos) is not 20:
-        # print "*** Not enough photos, discarding {} ...".format(u)
-        df = df[df['User ID'] != u]
-        pass
-    else:
-        for p in photos:
-            if p.type == 'image':
-                try:
-                    location = p.location.name
-                    latitude = p.location.point.latitude
-                    longitude = p.location.point.longitude
+    for p in photos:
+        if p.type == 'image':
+            try:
+                location = p.location.name
+                latitude = p.location.point.latitude
+                longitude = p.location.point.longitude
 
-                    # Check the coordinates
-                    lvec.append(check_location(latitude, longitude))
+                # Check the coordinates
+                lvec_bool.append(check_location(latitude, longitude))
+                lvec_coord.append((latitude, longitude))
 
-                except AttributeError:
-                    pass
+            except AttributeError:
+                pass
 
-            # Count instances in location vector
-            count = Counter(lvec)
+        # Count instances in location vector
+        count = Counter(lvec_bool)
 
-        pbar.next()
-
-        # Assign the user to a class
+    # Check location vector length
+    if len(lvec_coord) >= 10:
+        # Assign user to a class
         if count.most_common()[0][0]:
             uprof.append("local")
         if not count.most_common()[0][0]:
             uprof.append("visitor")
+    else:
+        uprof.append("unknown")
+
+    u_lvec.append(lvec_coord)
+
+    pbar.next()
 
 pbar.finish()
 
 # Append the user profiles to the dataframe
 df['Type'] = uprof
+df['Location vector'] = u_lvec
 
 # Reset dataframe index
 df = df.reset_index(drop=True)

@@ -1,15 +1,6 @@
 # Import the necessary packages and Instagram API credentials
 
-from instagram.client import InstagramAPI
-import requests
-import cv2
-import numpy as np
-import argparse
-import pandas as pd
-from api_credentials import access_token, client_secret, client_id
-from utils import classify, describe, train
-from datetime import datetime
-from progress.bar import Bar
+from utils import *
 
 # Authenticate with Instagram API
 
@@ -109,12 +100,12 @@ def download_location(lat, lng, dist, number, resolution):
     # Check the number of retrieved photos
     if len(photos) <= number:
         retnum = len(photos)
-        print "*** Not enough photos available at this location! Downloading only {} photos ...".format(retnum)
+        # print "*** Not enough photos available at this location! Downloading only {} photos ...".format(retnum)
     else:
         retnum = number
 
     # Initialize progress bar
-    dlbar = Bar('*** Downloading photos   ', max=retnum)
+    dlbar = Bar('*** Downloading photos', max=retnum)
 
     # Download images
     for m in range(0, retnum):

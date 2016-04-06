@@ -1,13 +1,6 @@
 # Import the necessary packages and Instagram API credentials
 
-from instagram.client import InstagramAPI
-import requests
-import cv2
-import numpy as np
-import argparse
-import pandas as pd
-from api_credentials import access_token, client_secret, client_id
-from utils import classify, describe, train
+from utils import *
 
 # Authenticate with Instagram API
 
@@ -48,28 +41,41 @@ def download_hashtag(number, tag, resolution):
     metadata = []
 
     # Retrieve data
-    hashtag, following = api.tag_recent_media(count=number, tag_name=tag)
+    photos, following = api.tag_recent_media(count=number, tag_name=tag)
     _, max_tag = following.split("max_tag_id=")
     max_tag = str(max_tag)
 
-    print "*** Looping over the images to be retrieved (this might take a while) ..."
+    # Calculate the number of pages: the first page has 33 images, the following 20
+    loops = int((number - 13) / float(20))
+
+    # Initialize progress bar
+    pbar = Bar('*** Retrieving identifiers', max=loops)
 
     # Loop over paginated data
-    while following and len(hashtag) <= number:
+    while following and len(photos) <= number:
         more_photos, following = api.tag_recent_media(tag_name=tag, max_tag_id=max_tag)
         _, max_tag = following.split("max_tag_id=")
         max_tag = str(max_tag)
-        hashtag.extend(more_photos)
+        photos.extend(more_photos)
 
-    if len(hashtag) <= number:
-        retnum = len(hashtag)
-        print "*** Not enough photos available at this hashtag! Downloading {} only photos ...".format(retnum)
+        # Update progess bar
+        pbar.next()
+
+    # Finish progress bar
+    pbar.finish()
+
+    if len(photos) <= number:
+        retnum = len(photos)
+        # print "*** Not enough photos available for this hashtag! Downloading {} only photos ...".format(retnum)
     else:
         retnum = number
 
+    # Initialize progress bar
+    dlbar = Bar('*** Downloading photos', max=retnum)
+
     # Download images
     for m in range(0, retnum):
-        photo = hashtag[m]
+        photo = photos[m]
         if photo.type == 'image':
             identifier = photo.id  # Unique image identifier
             user = photo.user.username  # Instagram username
@@ -84,8 +90,6 @@ def download_hashtag(number, tag, resolution):
                 location = "Location: N/A"
                 pass
 
-            print "*** Downloading", "#%s" % str(m + 1), identifier, "taken by", user, "at", location
-
             tags = []
             for tag in photo.tags:
                 tags.append(tag.name)
@@ -93,7 +97,7 @@ def download_hashtag(number, tag, resolution):
             # Check response
             response = requests.get(imurl)
             if response.status_code != 200:
-                print 'Aborting ... error {} (}'.format(response.status_code, response.reason)
+                print 'Aborting ... response {} (}'.format(response.status_code, response.reason)
 
             # Decode response
             image = np.asarray(bytearray(response.content), dtype="uint8")
@@ -131,6 +135,12 @@ def download_hashtag(number, tag, resolution):
 
             else:
                 pass
+
+            # Update progress bar
+            dlbar.next()
+
+    # Finish progress bar
+    dlbar.finish()
 
     print "*** Retrieved a total of {} images ... ".format(len(metadata))
 
