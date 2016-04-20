@@ -1,28 +1,22 @@
 # Import the necessary packages and Instagram API credentials
-
 from utils import *
 
 # Authenticate with Instagram API
-
 api = InstagramAPI(access_token=access_token, client_id=client_id, client_secret=client_secret)
 
 # Set up the argument parser
-
 ap = argparse.ArgumentParser()
 
 # Define arguments
-
 ap.add_argument("-ht", "--hashtag", required=True, help="Define the hashtag for retrieving images.")
 ap.add_argument("-n", "--number", required=True, help="Define the number of images to be retrieved.")
 ap.add_argument("-r", "--resolution", required=True, help="Define the resolution of the image to be retrieved.")
 ap.add_argument('-c', "--clean", action='store_true', help="Remove memes, screenshots and other clutter from the data.")
 
 # Parse arguments
-
 args = vars(ap.parse_args())
 
 # Assign arguments to variables
-
 count = int(args["number"])
 ht = args["hashtag"]
 size = args["resolution"]
@@ -49,7 +43,12 @@ def download_hashtag(number, tag, resolution):
     loops = int((number - 13) / float(20))
 
     # Initialize progress bar
-    pbar = Bar('*** Retrieving identifiers', max=loops)
+    widgets = ["*** Looping over pages:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+    pbar = progressbar.ProgressBar(maxval=loops, widgets=widgets)
+    pbar.start()
+
+    # Counter for while loop
+    counter = 1
 
     # Loop over paginated data
     while following and len(photos) <= number:
@@ -58,8 +57,12 @@ def download_hashtag(number, tag, resolution):
         max_tag = str(max_tag)
         photos.extend(more_photos)
 
+        # Update counter
+        counter += 1
+
         # Update progess bar
-        pbar.next()
+        if counter <= loops:
+            pbar.update(counter)
 
     # Finish progress bar
     pbar.finish()
@@ -71,7 +74,9 @@ def download_hashtag(number, tag, resolution):
         retnum = number
 
     # Initialize progress bar
-    dlbar = Bar('*** Downloading photos', max=retnum)
+    widgets = ["*** Downloading photos:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+    dlbar = progressbar.ProgressBar(maxval=retnum, widgets=widgets)
+    dlbar.start()
 
     # Download images
     for m in range(0, retnum):
@@ -136,8 +141,8 @@ def download_hashtag(number, tag, resolution):
             else:
                 pass
 
-            # Update progress bar
-            dlbar.next()
+        # Update progress bar
+        dlbar.update(m)
 
     # Finish progress bar
     dlbar.finish()

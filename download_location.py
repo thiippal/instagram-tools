@@ -1,36 +1,41 @@
 # Import the necessary packages and Instagram API credentials
-
 from utils import *
 
-# Authenticate with Instagram API
-
-api = InstagramAPI(access_token=access_token, client_id=client_id, client_secret=client_secret)
-
 # Define functions
-
 def convert_utc(datets):
-    """Converts a Python datetime into a Unix timestamp.
-    :param datets: Python datetime
-    :return: Unix timestamp
+    """
+    Converts a Python datetime into a Unix timestamp.
+
+    Args:
+        datets: Python datetime
+
+    Returns:
+        Unix timestamp
     """
     unix_ts = int((datets - datetime(1970, 1, 1)).total_seconds())
     return unix_ts
 
 def get_stamp(timestamp):
-    """Retrieves timestamp for the 100th image following the input timestamp, used to retrieve the next 100 images.
-    :param timestamp: Unix timestamp
-    :return: Unix timestamp
+    """
+    Retrieves timestamp for the 100th image following the input timestamp, used to retrieve the next 100 images.
+
+    Args:
+        timestamp: Unix timestamp
+
+    Returns:
+         Unix timestamp
     """
     media = api.media_search(lat=latitude, lng=longitude, distance=distance, count=100, max_timestamp=timestamp)
     new_max_timestamp = convert_utc(media[-1].created_time)
     return new_max_timestamp
 
-# Set up the argument parser
+# Authenticate with Instagram API
+api = InstagramAPI(access_token=access_token, client_id=client_id, client_secret=client_secret)
 
+# Set up the argument parser
 ap = argparse.ArgumentParser()
 
 # Define arguments
-
 ap.add_argument("-lat", "--latitude", required=True, help="Define the latitude of the location.")
 ap.add_argument("-lon", "--longitude", required=True, help="Define the longitude of the location.")
 ap.add_argument("-d", "--distance", required=True, help="Define a radius for the defined point in metres.")
@@ -42,11 +47,9 @@ ap.add_argument('-c', "--clean", action='store_true', help="Remove memes, screen
 # python download_location.py -lat 60.169444 -lon 24.9525 -d 100 -n 180 -r thumbnail
 
 # Parse arguments
-
 args = vars(ap.parse_args())
 
 # Assign arguments to variables
-
 latitude = float(args["latitude"])
 longitude = float(args["longitude"])
 distance = int(args["distance"])
@@ -60,7 +63,7 @@ if clean:
     print "*** Attempting to remove memes, screenshots and other clutter ..."
     model = train()
 
-
+# Define a function for downloading images
 def download_location(lat, lng, dist, number, resolution):
     # Set up a list for metadata
     metadata = []
@@ -80,14 +83,16 @@ def download_location(lat, lng, dist, number, resolution):
         loops = int(count / float(100))
 
         # Initialize progress bar
-        lbar = Bar('*** Retrieving timestamps', max=loops)
+        widgets = ["*** Retrieving timestamps:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+        lbar = progressbar.ProgressBar(maxval=loops, widgets=widgets)
+        lbar.start()
 
         # Get the maximum timestamp for each batch of 100 photos
         timestamps = [init_timestamp]
         for stamp in range(0, loops):
             timestamps.append(get_stamp(timestamps[-1]))
             # Update progress bar
-            lbar.next()
+            lbar.update(stamp)
 
         # Fetch the images using timestamps
         for timestamp in timestamps:
@@ -105,7 +110,9 @@ def download_location(lat, lng, dist, number, resolution):
         retnum = number
 
     # Initialize progress bar
-    dlbar = Bar('*** Downloading photos', max=retnum)
+    widgets = ["*** Downloading photos:   ", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+    dlbar = progressbar.ProgressBar(maxval=retnum, widgets=widgets)
+    dlbar.start()
 
     # Download images
     for m in range(0, retnum):
@@ -171,8 +178,8 @@ def download_location(lat, lng, dist, number, resolution):
             else:
                 pass
 
-            # Update progress bar
-            dlbar.next()
+        # Update progress bar
+        dlbar.update(m)
 
     # Finish progress bar
     dlbar.finish()
@@ -184,7 +191,7 @@ def download_location(lat, lng, dist, number, resolution):
 
     return dataframe
 
-
+# Download images
 df = download_location(latitude, longitude, distance, count, size)
 
 # Define a filename for dataframe

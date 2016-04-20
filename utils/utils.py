@@ -1,15 +1,12 @@
 # Import the necessary packages
 
-from __future__ import print_function
 from sklearn.cross_validation import train_test_split
-from sklearn.metrics import classification_report
 from sklearn.ensemble import RandomForestClassifier
 from imutils import paths
 import numpy as np
 import mahotas
 import cv2
 import pickle
-
 
 # Describe image using colour statistics and Haralick texture
 def describe(image):
@@ -65,7 +62,10 @@ def train():
     labels = pickle.load(ld_file)
 
     # Split data for training and testing
-    (traindata, testdata, trainlabels, testlabels) = train_test_split(np.array(data), np.array(labels), test_size=0.25, random_state=42)
+    (traindata, testdata, trainlabels, testlabels) = train_test_split(np.array(data),
+                                                                      np.array(labels),
+                                                                      test_size=0.25,
+                                                                      random_state=42)
 
     # Train Random Forest Classifier
     model = RandomForestClassifier(n_estimators=20, random_state=42)

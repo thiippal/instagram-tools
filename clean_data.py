@@ -9,23 +9,18 @@ from utils import classify, describe, train
 model = train()
 
 # Set up the argument parser
-
 ap = argparse.ArgumentParser()
 
 # Define arguments
-
 ap.add_argument("-f", "--file", required=True, help="Path to the pandas dataframe with Instagram metadata.")
 
 # Parse arguments
-
 args = vars(ap.parse_args())
 
 # Assign arguments to variables
-
 df_file = args["file"]
 
 # Load dataframe
-
 df = pd.read_pickle(df_file)
 
 print "*** Loading Instagram metadata from {} ...".format(df_file)

@@ -4,9 +4,9 @@
 
 # API requests
 import requests
-from progress.bar import Bar
 from datetime import datetime
 from collections import Counter
+import progressbar
 
 # Argument parser
 import argparse
@@ -24,6 +24,3 @@ import pandas as pd
 
 # Support functions
 from utils import classify, describe, train
-
-
-
