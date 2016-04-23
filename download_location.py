@@ -83,24 +83,41 @@ def download_location(lat, lng, dist, number, resolution):
         loops = int(count / float(100))
 
         # Initialize progress bar
-        widgets = ["*** Retrieving timestamps:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
-        lbar = progressbar.ProgressBar(maxval=loops, widgets=widgets)
+        lbar_widgets = ["*** Retrieving timestamps:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+        lbar = progressbar.ProgressBar(maxval=loops, widgets=lbar_widgets)
         lbar.start()
+
+        # Counter for the ranged loop
+        counter = 1
 
         # Get the maximum timestamp for each batch of 100 photos
         timestamps = [init_timestamp]
         for stamp in range(0, loops):
             timestamps.append(get_stamp(timestamps[-1]))
-            # Update progress bar
-            lbar.update(stamp)
 
-        # Fetch the images using timestamps
-        for timestamp in timestamps:
-            more_photos = api.media_search(lat=lat, lng=lng, distance=dist, count=100, max_timestamp=timestamp)
-            photos.extend(more_photos)
+            # Update counter
+            counter += 1
+
+            # Update progess bar
+            if counter <= loops:
+                lbar.update(counter)
 
         # Finish progress bar
         lbar.finish()
+
+        # Initialize progress bar
+        tbar_widgets = ["*** Collecting photos:    ", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+        tbar = progressbar.ProgressBar(maxval=loops, widgets=tbar_widgets)
+        tbar.start()
+
+        # Fetch the images using timestamps
+        for t, timestamp in enumerate(timestamps):
+            more_photos = api.media_search(lat=lat, lng=lng, distance=dist, count=100, max_timestamp=timestamp)
+            photos.extend(more_photos)
+            tbar.update(t)
+
+        # Finish progress bar
+        tbar.finish()
 
     # Check the number of retrieved photos
     if len(photos) <= number:
@@ -110,8 +127,8 @@ def download_location(lat, lng, dist, number, resolution):
         retnum = number
 
     # Initialize progress bar
-    widgets = ["*** Downloading photos:   ", " ", progressbar.Percentage(), " ", progressbar.ETA()]
-    dlbar = progressbar.ProgressBar(maxval=retnum, widgets=widgets)
+    dlbar_widgets = ["*** Downloading photos:   ", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+    dlbar = progressbar.ProgressBar(maxval=retnum, widgets=dlbar_widgets)
     dlbar.start()
 
     # Download images

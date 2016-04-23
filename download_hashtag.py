@@ -43,8 +43,8 @@ def download_hashtag(number, tag, resolution):
     loops = int((number - 13) / float(20))
 
     # Initialize progress bar
-    widgets = ["*** Looping over pages:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
-    pbar = progressbar.ProgressBar(maxval=loops, widgets=widgets)
+    pbar_widgets = ["*** Looping over pages:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+    pbar = progressbar.ProgressBar(maxval=loops, widgets=pbar_widgets)
     pbar.start()
 
     # Counter for while loop
@@ -74,8 +74,8 @@ def download_hashtag(number, tag, resolution):
         retnum = number
 
     # Initialize progress bar
-    widgets = ["*** Downloading photos:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
-    dlbar = progressbar.ProgressBar(maxval=retnum, widgets=widgets)
+    dlbar_widgets = ["*** Downloading photos:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+    dlbar = progressbar.ProgressBar(maxval=retnum, widgets=dlbar_widgets)
     dlbar.start()
 
     # Download images
