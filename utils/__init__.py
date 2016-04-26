@@ -23,4 +23,5 @@ import numpy as np
 import pandas as pd
 
 # Support functions
-from utils import classify, describe, train
+from utils import *
+import imutils

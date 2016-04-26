@@ -122,7 +122,6 @@ def download_location(lat, lng, dist, number, resolution):
     # Check the number of retrieved photos
     if len(photos) <= number:
         retnum = len(photos)
-        # print "*** Not enough photos available at this location! Downloading only {} photos ...".format(retnum)
     else:
         retnum = number
 
@@ -164,15 +163,33 @@ def download_location(lat, lng, dist, number, resolution):
             save = True
 
             # Describe and classify the image if requested
-            if clean:
+            if clean and size is 'thumbnail':
                 # Extract features
-                features = describe(image)
+                features = describe_haralick_stats(image)
 
                 # Classify image
                 prediction = classify(features, model)
 
                 if prediction == 'photo':
-                        pass
+                    pass
+                if prediction == 'other':
+                    save = False
+
+            if clean and size is not 'thumbnail':
+                # Make a copy of the image
+                image_rz = image.copy()
+
+                # Resize image
+                resized = imutils.resize(image_rz, width=150)
+
+                # Extract features
+                features = describe_haralick_stats(resized)
+
+                # Classify image
+                prediction = classify(features, model)
+
+                if prediction == 'photo':
+                    pass
                 if prediction == 'other':
                     save = False
 

@@ -42,34 +42,36 @@ def download_hashtag(number, tag, resolution):
     # Calculate the number of pages: the first page has 33 images, the following 20
     loops = int((number - 13) / float(20))
 
-    # Initialize progress bar
-    pbar_widgets = ["*** Looping over pages:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
-    pbar = progressbar.ProgressBar(maxval=loops, widgets=pbar_widgets)
-    pbar.start()
+    # Initialize progress bar if multiple loops are necessary
+    if loops >= 1:
+        # Initialize progress bar
+        pbar_widgets = ["*** Looping over pages:", " ", progressbar.Percentage(), " ", progressbar.ETA()]
+        pbar = progressbar.ProgressBar(maxval=loops, widgets=pbar_widgets)
+        pbar.start()
 
-    # Counter for while loop
-    counter = 1
+        # Counter for while loop
+        counter = 1
 
-    # Loop over paginated data
-    while following and len(photos) <= number:
-        more_photos, following = api.tag_recent_media(tag_name=tag, max_tag_id=max_tag)
-        _, max_tag = following.split("max_tag_id=")
-        max_tag = str(max_tag)
-        photos.extend(more_photos)
+        # Loop over paginated data
+        while following and len(photos) <= number:
+            more_photos, following = api.tag_recent_media(tag_name=tag, max_tag_id=max_tag)
+            _, max_tag = following.split("max_tag_id=")
+            max_tag = str(max_tag)
+            photos.extend(more_photos)
 
-        # Update counter
-        counter += 1
+            # Update counter
+            counter += 1
 
-        # Update progess bar
-        if counter <= loops:
-            pbar.update(counter)
+            # Update progess bar
+            if counter <= loops:
+                pbar.update(counter)
 
-    # Finish progress bar
-    pbar.finish()
+        # Finish progress bar
+        pbar.finish()
 
+    # Check the available number of photos
     if len(photos) <= number:
         retnum = len(photos)
-        # print "*** Not enough photos available for this hashtag! Downloading {} only photos ...".format(retnum)
     else:
         retnum = number
 
@@ -111,9 +113,27 @@ def download_hashtag(number, tag, resolution):
             save = True
 
             # Describe and classify the image if requested
-            if clean:
+            if clean and size is 'thumbnail':
                 # Extract features
-                features = describe(image)
+                features = describe_haralick_stats(image)
+
+                # Classify image
+                prediction = classify(features, model)
+
+                if prediction == 'photo':
+                    pass
+                if prediction == 'other':
+                    save = False
+
+            if clean and size is not 'thumbnail':
+                # Make a copy of the image
+                image_rz = image.copy()
+
+                # Resize image
+                resized = imutils.resize(image_rz, width=150)
+
+                # Extract features
+                features = describe_haralick_stats(resized)
 
                 # Classify image
                 prediction = classify(features, model)
